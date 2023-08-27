@@ -4,8 +4,9 @@ from urllib import parse
 
 app = Flask(__name__, template_folder="templates")
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/')  # , methods=['GET', 'POST'])
 def index():
+    """
     if request.method == 'POST':
         option = request.form.get('option')
         minutes = request.form.get('minutes')
@@ -20,9 +21,10 @@ def index():
             result = "Invalid option"
 
         return render_template("index.html", result=result)
-
+    """
     return render_template("index.html")
 
+"""
 def app_handler(environ, start_response):
     return app(environ, start_response)
 
@@ -35,6 +37,8 @@ class handler(BaseHTTPRequestHandler):
         message = app_handler
         self.wfile.write(message.encode())
         return
+"""
+
 
 @app.route('/about')
 def about():
