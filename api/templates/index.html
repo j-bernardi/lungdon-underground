@@ -30,8 +30,7 @@
     </form>
 
     {% if result %}
-    <h2>Result: {{ result }}</h2>
+    {{ result|safe }}
     {% endif %}
 </body>
 </html>
-
