@@ -1,46 +1,64 @@
-from flask import Flask, request, render_template
-from http.server import BaseHTTPRequestHandler
-from urllib import parse
+from flask import Flask, request, render_template, redirect, url_for, session
+
+from secret_key import SECRET_KEY
+
 
 app = Flask(__name__, template_folder="templates")
+app.secret_key = SECRET_KEY
 
-@app.route('/')  # , methods=['GET', 'POST'])
+
+HTML_FILE = "index.html"  # looks in folder due to line above
+
+# TODO data in here. Maybe colour, and definitely formula parameters
+# TODO create a standard data structure
+OPTIONS = {
+    "Victoria": {"mult": 5},
+    "Northern": {"mult": 4},
+    "Picadilly": {"mult": 3},
+    "Hammersmith and City": {"mult": 1},
+}
+
+
+@app.route("/", methods=["GET", "POST"])
 def index():
-    """
-    if request.method == 'POST':
-        option = request.form.get('option')
-        minutes = request.form.get('minutes')
-        
-        if option == '1':
-            result = int(minutes) * 2
-        elif option == '2':
-            result = int(minutes) * 3
-        elif option == '3':
-            result = int(minutes) * 4
-        else:
-            result = "Invalid option"
 
-        return render_template("index.html", result=result)
-    """
-    return render_template("index.html")
+    options = list(OPTIONS.keys())
 
-"""
-def app_handler(environ, start_response):
-    return app(environ, start_response)
+    if request.method == "POST":
 
-class handler(BaseHTTPRequestHandler):
-    def do_GET(self):
-        self.send_response(200)
-        self.send_header('Content-type','text/html')
-        self.end_headers()
+        tube_line_select = request.form.get("tube_line_selector")
+        minutes = request.form.get("minutes")
 
-        message = app_handler
-        self.wfile.write(message.encode())
-        return
-"""
+        if not (tube_line_select and minutes):
+            result = f"Invalid A: {minutes} B: {tube_line_select}"
+
+        result = formula(tube_line_select, minutes)
+
+        session["result"] = result
+
+        return redirect(url_for("index"))
+
+    result = session.pop("result", None)
+    return render_template(HTML_FILE, options=options, result=result)
 
 
-@app.route('/about')
+@app.route("/about")
 def about():
     return 'About'
 
+
+def formula(tube_line, minutes_spent):
+
+    if not tube_line:
+        return ""
+    elif tube_line not in OPTIONS:
+        result = "Invalid option"
+
+    try:
+        mins = int(minutes_spent)
+    except:
+        return "Invalid minutes: must be integer"
+
+    result = mins * OPTIONS[tube_line]["mult"]
+    
+    return result
