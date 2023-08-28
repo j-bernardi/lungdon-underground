@@ -1,11 +1,14 @@
 import os
 from flask import Flask, request, render_template, redirect, url_for, session
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 
 
 app = Flask(__name__, template_folder="templates")
 
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 
+DEFAULT_LIMITS = ["300 per day", "50 per hour", "20 per minute", "1 per second"]
 
 HTML_FILE = "index.html"  # looks in folder due to line above
 
@@ -19,7 +22,15 @@ OPTIONS = {
 }
 
 
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=DEFAULT_LIMITS,
+)
+
+
 @app.route("/", methods=["GET", "POST"])
+@limiter.limit("2 per second")
 def index():
 
     options = list(OPTIONS.keys())
