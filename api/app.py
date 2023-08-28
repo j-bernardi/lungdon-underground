@@ -1,10 +1,10 @@
+import os
 from flask import Flask, request, render_template, redirect, url_for, session
-
-from secret_key import SECRET_KEY
 
 
 app = Flask(__name__, template_folder="templates")
-app.secret_key = SECRET_KEY
+
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 
 
 HTML_FILE = "index.html"  # looks in folder due to line above
