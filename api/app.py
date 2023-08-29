@@ -38,13 +38,18 @@ TODO resolve:
 def index():
 
     RESULT_KEY = "result"  # This must match in the HTML file
+    SELECTED_OPTION_KEY = "selected_option"
+    MINUTES_KEY = "input_minutes"
 
     options = list(
         k for k in OPTIONS.keys() if OPTIONS[k][TYPE_KEY] == TUBE_VAL)
 
     if request.method == "POST":
 
+        # TODO validate this is in the "options" dictionary and is a string with no tags
         tube_line_select = request.form.get("tube_line_selector")
+
+        # TODO validate this is an integer number with regex
         minutes = request.form.get("minutes")
 
         if not (tube_line_select and minutes):
@@ -53,13 +58,17 @@ def index():
         result_tuple = conversion_formula(tube_line_select, minutes)
 
         session[RESULT_KEY] = prettify_results(result_tuple)
+        session[SELECTED_OPTION_KEY] = tube_line_select
+        session[MINUTES_KEY] = minutes
 
         return redirect(url_for(HTML_FILE.split(".")[0]))
 
+    selected_option = session.pop(SELECTED_OPTION_KEY, None)  # was get
+    selected_minutes = session.pop(MINUTES_KEY, None)  # was get
     result = session.pop(RESULT_KEY, None)
 
     # These kwargs must match those found in the HTML file 
-    return render_template(HTML_FILE, options=options, result=result)
+    return render_template(HTML_FILE, options=options, result=result, selected_option=selected_option, selected_minutes=selected_minutes)
 
 
 @app.route("/about")
@@ -67,9 +76,12 @@ def about():
     return "About"
 
 
-# TODO
 def prettify_results(result_tuple):
     """ TODO
+
+    Consider moving this straight into the HTML
+
+    because
 
     Be cautious when using these methods to make sure you're not inadvertently
     making your application susceptible to Cross-Site Scripting (XSS) attacks by
@@ -78,19 +90,31 @@ def prettify_results(result_tuple):
     if any(r is None for r in result_tuple):
         return None
 
-    result, cycle_result, holiday_result, extra_detail = result_tuple
+    result, cycle_result, urban_result, all_day_result, rod_result, extra_detail = result_tuple
 
-    return_string = [f"<h2>{result:.2f} cigarettes for this trip</h2>"]
+    return_string = [f"<h2>{result:.2f} cigarettes smoked on this trip</h2>"]
 
     return_string.append(
-        f"That's {result * 5. * 2.:.2f} cigarettes a week, on your commute"
+        f"<p><strong>Cycling:</strong> if you'd cycled, that would have been {cycle_result:.2f}.</p>"
+    )
+
+    return_string.append("<p><strong>More stats if you live in London...</strong></p>")
+
+    # TODO - check PM2.5 indoors
+    # return_string.append(
+    #     f"<p><strong>Staying home</strong> would have been {urban_result:.2f} (assuming you live in central london).</p>"
+    # )
+
+    # TODO - check PM2.5 indoors
+    return_string.append(
+        f"<p><strong>Your daily total</strong> is taken from {all_day_result:.2f} to {(rod_result + result):.2f} by this tube ride. "
+        f"That's the price to pay for living in London!</p>"
     )
 
     return_string.append(
-        f"<p>If you'd cycled, that would have been {cycle_result:.2f}.</p>"
-    )
-    return_string.append(
-        f"<p>If you'd stayed home, that would have been {holiday_result:.2f}.</p>"
+        f"<p><strong>Your weekly contribution</strong> from this commute is {result * 5. * 2.:.2f} cigarettes a week, "
+        f"taking your weekly total cigarette smoking to {(rod_result + result/2) * 2 * 5 + all_day_result * 2:.2f}. "
+        f"(Assuming taking this trip twice daily, 5 days a week, and not riding the tube at weekends</p>"
     )
 
     if extra_detail:

@@ -14,11 +14,14 @@ AMBIENT_VAL = "Ambient"
 # Hardcoded overall keys
 AVERAGE_TUBE_ITEM_KEY = "London Underground Overall"
 ROADSIDE_ITEM_KEY = "Ambient Roadside"
-AMBIENT_BACKGROUND_ITEM_KEY = "Ambient Background"
+URBAN_BACKGROUND_ITEM_KEY = "Ambient Background"
 
 # All units in microgrammes per m3
 # Source [1]: https://www.sciencedirect.com/science/article/pii/S0160412019313649?via%3Dihub
-# TODO figure out how district line is less than outside
+
+# TODO use the actual data instead of Options! From tube_data.tube_map import Map
+#  Get every tube stop passed through, and average the data
+
 OPTIONS = {
     "District line": {
         TYPE_KEY: TUBE_VAL,
@@ -51,7 +54,7 @@ OPTIONS = {
         MEAN_KEY: 88,  # [1]
         MEDIAN_KEY: 28  # [1]
     },
-    AMBIENT_BACKGROUND_ITEM_KEY: {
+    URBAN_BACKGROUND_ITEM_KEY: {
         TYPE_KEY: AMBIENT_VAL,
         MEAN_KEY: 19,  # [1]  TODO figure out what this was
         MEDIAN_KEY: 14  # [1]
@@ -99,12 +102,14 @@ def conversion_formula(tube_line, minutes_spent):
         tube_mean_exposure = data_item[MEAN_KEY]
 
     cycle_mean_exposure = OPTIONS[ROADSIDE_ITEM_KEY][MEAN_KEY]
-    holiday_mean_exposure = OPTIONS[AMBIENT_BACKGROUND_ITEM_KEY][MEAN_KEY]
+    urban_mean_exposure = OPTIONS[URBAN_BACKGROUND_ITEM_KEY][MEAN_KEY]
 
     frac_mins = mins / (24. * 60.)
 
     result_cigs = CIGARETTES_FOR_ALL_DAY_TUBE(tube_mean_exposure) * frac_mins
     cycle_result_cigs = CIGARETTES_FOR_ALL_DAY_TUBE(cycle_mean_exposure) * frac_mins
-    holiday_result_cigs = CIGARETTES_FOR_ALL_DAY_TUBE(holiday_mean_exposure) * frac_mins
+    holiday_result_cigs = CIGARETTES_FOR_ALL_DAY_TUBE(urban_mean_exposure) * frac_mins
+    all_day_result = CIGARETTES_FOR_ALL_DAY_TUBE(urban_mean_exposure)
+    rest_of_day_result_cigs = ((24. * 60. - mins) / (24 * 60)) * CIGARETTES_FOR_ALL_DAY_TUBE(urban_mean_exposure)
 
-    return result_cigs, cycle_result_cigs, holiday_result_cigs, extra_detail
+    return result_cigs, cycle_result_cigs, holiday_result_cigs, all_day_result, rest_of_day_result_cigs, extra_detail
