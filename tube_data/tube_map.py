@@ -2,6 +2,8 @@ import os
 import pickle
 import pandas as pd
 
+from collections import deque
+
 pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
@@ -41,13 +43,13 @@ class Map:
                 self.lines = pickle.load(f)
 
             with open(name_map_data_path, "rb") as f:
-                self.station_name_lookup = pickle.load(f)
+                self.station_name_id_lookup = pickle.load(f)
 
             return
 
         self.lines = {}
         self.stations = {}
-        self.station_name_lookup = {}  # Map name to ID
+        self.station_name_id_lookup = {}  # Map name to ID
 
         print("Reading stations")
         with open(os.path.join(this_filepath, "stations.csv"), "r") as f:
@@ -74,7 +76,7 @@ class Map:
                 id=line_row["line"], name=line_row["name"])
 
         for temp_i, station_row in stations_data.iterrows():
-            self.station_name_lookup[station_row["name"]] = station_row["id"]
+            self.station_name_id_lookup[station_row["name"]] = station_row["id"]
 
             relevant_edges = edges_data[
                 (edges_data["station1"] == station_row["id"])
@@ -105,7 +107,7 @@ class Map:
         for _, edge_row in edges_data.iterrows():
             s1 = self.stations[edge_row["station1"]]
             s2 = self.stations[edge_row["station2"]]
-            assert len(s1.lines.union(s2.lines)) > 0
+            assert len(s1.lines.intersection(s2.lines)) > 0
             s1.connected_stations.add(s2)
             s2.connected_stations.add(s1)
 
@@ -118,20 +120,56 @@ class Map:
             pickle.dump(self.lines, f)
 
         with open(name_map_data_path, "wb") as f:
-            pickle.dump(self.station_name_lookup, f)
+            pickle.dump(self.station_name_id_lookup, f)
     
-    def stations_between(self, station1_name, station2_name):
+    def stations_between(self, station1_name, station2_name, station1_line_name):
         """Takes stations as names"""
         # Assert both stations
 
-        station1_id = self.station_name_lookup[station1_name]
+        station1_id = self.station_name_id_lookup[station1_name]
         station1 = self.stations[station1_id]
 
-        station2_id = self.station_name_lookup[station2_name]
+        station2_id = self.station_name_id_lookup[station2_name]
         station2 = self.stations[station2_id]
 
-        assert len(station1.lines.union(station2.lines)) > 0, (
+        assert len(station1.lines.intersection(station2.lines)) > 0, (
             f"{station1_name} & {station2_name} not on same line")
+        
+        """
+        def check_path(next_station):
+            connected_stations = next_station.connected_stations
 
-        paths = []
+            if station2.id in [cs.id for cs in connected_stations]:
+                return next_station
+            else:
+                next_valid_paths = [check_path(cs) for cs in connected_stations]
+
         # TODO - traverse all paths til you find it
+        valid_paths = []
+        valid_paths = check_path(station1)
+        """
+
+        visited = set()
+        queue = deque([[station1]])
+
+        while queue:
+            path = queue.popleft()
+            current_station = path[-1]
+
+            if current_station.id in visited:
+                continue
+
+            for next_station in current_station.connected_stations:
+                if station1_line_name not in [line.name for line in next_station.lines]:
+                    continue
+                print(f"{next_station.name} on {station1_line_name} line")
+                new_path = list(path)
+                new_path.append(next_station)
+                queue.append(new_path)
+
+                if next_station.id == station2.id:
+                    return [station.name for station in new_path]  # or station.id if you want the IDs
+
+            visited.add(current_station.id)
+
+        return None  # Return None if no path exists
