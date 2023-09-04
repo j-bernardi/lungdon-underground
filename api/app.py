@@ -4,6 +4,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 from api.convert import OPTIONS, conversion_formula, TYPE_KEY, TUBE_VAL
+from tube_data.tube_map import Map
 
 app = Flask(__name__, template_folder="templates")
 
@@ -37,12 +38,13 @@ TODO resolve:
 @limiter.limit("2 per second")
 def index():
 
+    tube_map = Map()
+
     RESULT_KEY = "result"  # This must match in the HTML file
     SELECTED_OPTION_KEY = "selected_option"
     MINUTES_KEY = "input_minutes"
 
-    options = list(
-        k for k in OPTIONS.keys() if OPTIONS[k][TYPE_KEY] == TUBE_VAL)
+    tube_line_options = [line.name for line in tube_map.lines.values()]
 
     if request.method == "POST":
 
@@ -68,7 +70,13 @@ def index():
     result = session.pop(RESULT_KEY, None)
 
     # These kwargs must match those found in the HTML file 
-    return render_template(HTML_FILE, options=options, result=result, selected_option=selected_option, selected_minutes=selected_minutes)
+    return render_template(
+        HTML_FILE,
+        options=tube_line_options,
+        result=result,
+        selected_option=selected_option,
+        selected_minutes=selected_minutes,
+    )
 
 
 @app.route("/about")
@@ -89,6 +97,8 @@ def prettify_results(result_tuple):
     """
     if any(r is None for r in result_tuple):
         return None
+
+    print(result_tuple)
 
     result, cycle_result, urban_result, all_day_result, rod_result, extra_detail = result_tuple
 

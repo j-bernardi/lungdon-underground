@@ -22,33 +22,7 @@ URBAN_BACKGROUND_ITEM_KEY = "Ambient Background"
 # TODO use the actual data instead of Options! From tube_data.tube_map import Map
 #  Get every tube stop passed through, and average the data
 
-OPTIONS = {
-    "District line": {
-        TYPE_KEY: TUBE_VAL,
-        MEAN_KEY: 6,  # Guess based on median
-        MEDIAN_KEY: 4  # [1]
-    },
-    "Victoria": {
-        TYPE_KEY: TUBE_VAL,
-        MEAN_KEY: 450,  # Guess based on median and max
-        MEDIAN_KEY: 361,  # [1]
-        MAX_KEY: 885,  # [1]
-    },
-    "Northern": {
-        TYPE_KEY: TUBE_VAL,
-        MEAN_KEY: 350,  # Guess based on [1]
-        MEDIAN_KEY: 300,
-    },
-    "Picadilly": {
-        TYPE_KEY: TUBE_VAL,
-        MEAN_KEY: 250,  # Guess based on [1]
-        MEDIAN_KEY: 200,  # Guess based on mean
-    },
-    "Hammersmith and City": {
-        TYPE_KEY: TUBE_VAL,
-        MEAN_KEY: 6,  # Guess based on median
-        MEDIAN_KEY: 4,  # Guess based on [1]
-    },
+AMBIENT_DATA = {
     AVERAGE_TUBE_ITEM_KEY: {
         TYPE_KEY: AMBIENT_VAL,
         MEAN_KEY: 88,  # [1]
@@ -72,44 +46,47 @@ PM25_VAL_ALL_DAY_FOR_ONE_CIGARETTE = 22.
 CIGARETTES_FOR_ALL_DAY_TUBE = lambda tube_val: tube_val / PM25_VAL_ALL_DAY_FOR_ONE_CIGARETTE
 
 # Validate
-for k, item in OPTIONS.items():
+for k, item in AMBIENT_DATA.items():
     for expected_key in EXPECTED_KEYS:
         assert expected_key in item.keys(), (
             f"Expected key {expected_key} not found in {k}: {item}")
 
 
-def conversion_formula(tube_line, minutes_spent):
+def conversion_formula(tube_path, minutes_spent):
 
-    if not tube_line:
-        return f"Invalid tube line (empty)"
-    elif tube_line not in OPTIONS:
-        return f"Invalid option {tube_line}"
+    if not tube_path:
+        return f"Invalid tube path {tube_path}"
+    elif tube_path not in AMBIENT_DATA:
+        return f"Invalid option {tube_path}"
 
     try:
         mins = float(minutes_spent)
     except:
         return "Invalid minutes: must be integer"
     
-    data_item = OPTIONS[tube_line]
+    # TODO - this should now look up pm25 at each station
+    data_item = AMBIENT_DATA[tube_path]
+    #####################################################
 
     extra_detail = ""
 
     if data_item[MEAN_KEY] is None:
         assert data_item[TYPE_KEY] == TUBE_VAL
-        tube_mean_exposure = OPTIONS[AVERAGE_TUBE_ITEM_KEY][MEAN_KEY]
+        tube_mean_exposure = AMBIENT_DATA[AVERAGE_TUBE_ITEM_KEY][MEAN_KEY]
         extra_detail += "used default value as no data found"
     else:
         tube_mean_exposure = data_item[MEAN_KEY]
 
-    cycle_mean_exposure = OPTIONS[ROADSIDE_ITEM_KEY][MEAN_KEY]
-    urban_mean_exposure = OPTIONS[URBAN_BACKGROUND_ITEM_KEY][MEAN_KEY]
+    cycle_mean_exposure = AMBIENT_DATA[ROADSIDE_ITEM_KEY][MEAN_KEY]
+    urban_mean_exposure = AMBIENT_DATA[URBAN_BACKGROUND_ITEM_KEY][MEAN_KEY]
 
     frac_mins = mins / (24. * 60.)
 
     result_cigs = CIGARETTES_FOR_ALL_DAY_TUBE(tube_mean_exposure) * frac_mins
     cycle_result_cigs = CIGARETTES_FOR_ALL_DAY_TUBE(cycle_mean_exposure) * frac_mins
-    holiday_result_cigs = CIGARETTES_FOR_ALL_DAY_TUBE(urban_mean_exposure) * frac_mins
+    urban_result_cigs = CIGARETTES_FOR_ALL_DAY_TUBE(urban_mean_exposure) * frac_mins
     all_day_result = CIGARETTES_FOR_ALL_DAY_TUBE(urban_mean_exposure)
     rest_of_day_result_cigs = ((24. * 60. - mins) / (24 * 60)) * CIGARETTES_FOR_ALL_DAY_TUBE(urban_mean_exposure)
 
-    return result_cigs, cycle_result_cigs, holiday_result_cigs, all_day_result, rest_of_day_result_cigs, extra_detail
+    return result_cigs, cycle_result_cigs, urban_result_cigs, all_day_result, rest_of_day_result_cigs, extra_detail
+    # result, cycle_result, urban_result, all_day_result, rod_result, extra_detail

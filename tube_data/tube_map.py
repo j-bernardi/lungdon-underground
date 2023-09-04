@@ -11,10 +11,11 @@ pd.set_option('display.width', 1000)
 
 class Station:
 
-    def __init__(self, id: int, name: str, lines: set, connected_stations: set = None):
+    def __init__(self, id: int, name: str, lines: set, pm25_values: dict, connected_stations: set = None):
         self.id = id
         self.name = name
         self.lines = lines
+        self.pm25_values = pm25_values  # Map line_name: value
         self.connected_stations = connected_stations or set()
 
 class Line:
@@ -62,6 +63,10 @@ class Map:
         print("Reading edges")
         with open(os.path.join(this_filepath, "edges.csv"), "r") as f:
             edges_data = pd.read_csv(f)
+        
+        print("Reading pm25")
+        with open(os.path.join(this_filepath, "pm25_per_station_line.csv"), "r") as f:
+            pm25_data = pd.read_csv(f)
 
 
         print("LINES")
@@ -70,10 +75,15 @@ class Map:
         print(stations_data.head())
         print("EDGES")
         print(edges_data.head())
+        print("PM25")
+        print(pm25_data.head())
 
+        # Add all the lines to the object
         for _, line_row in lines_data.iterrows():
             self.lines[line_row["line"]] = Line(
-                id=line_row["line"], name=line_row["name"])
+                id=line_row["line"],
+                name=line_row["name"]
+            )
 
         for temp_i, station_row in stations_data.iterrows():
             self.station_name_id_lookup[station_row["name"]] = station_row["id"]
@@ -92,10 +102,25 @@ class Map:
                 f"\nLines are {[l.name for l in line_objects]}"
             )
 
+            # TODO index this on lines instead! Currently pm25 data is missing some rows, so we should try to fix it 
+            station_pm25s = pm25_data[pm25_data["station"] == station_row["name"]]
+            station_pm25_dict = {}
+            for _, pm25_row in station_pm25s.iterrows():
+
+                # Make keys match the tube map data (merging 2 sources)
+                matching_line_key = pm25_row["line"] + (
+                    " Line" if pm25_row["line"] != "Docklands Light Railway" else "")
+
+                assert matching_line_key in [l.name for l in self.lines.values()], (
+                    f"{matching_line_key} not in {[l.name for l in self.lines.values()]}")
+
+                station_pm25_dict[matching_line_key] = pm25_row["pm25"]
+
             station_object = Station(
                 id=station_row["id"],
                 name=station_row["name"],
                 lines=line_objects,
+                pm25_values=station_pm25_dict,
                 connected_stations=None,
             )
 
@@ -103,7 +128,7 @@ class Map:
 
             for line_i in line_idxs_on_station:
                 self.lines[line_i].stations_on_line.add(station_object)
-        
+
         for _, edge_row in edges_data.iterrows():
             s1 = self.stations[edge_row["station1"]]
             s2 = self.stations[edge_row["station2"]]
@@ -132,22 +157,12 @@ class Map:
         station2_id = self.station_name_id_lookup[station2_name]
         station2 = self.stations[station2_id]
 
+        assert station1_line_name in [l.name for l in station1.lines], (
+            f"{station1_line_name} not at station {station1_name}, {[l.name for l in station1.lines]}"
+        )
+
         assert len(station1.lines.intersection(station2.lines)) > 0, (
             f"{station1_name} & {station2_name} not on same line")
-        
-        """
-        def check_path(next_station):
-            connected_stations = next_station.connected_stations
-
-            if station2.id in [cs.id for cs in connected_stations]:
-                return next_station
-            else:
-                next_valid_paths = [check_path(cs) for cs in connected_stations]
-
-        # TODO - traverse all paths til you find it
-        valid_paths = []
-        valid_paths = check_path(station1)
-        """
 
         visited = set()
         queue = deque([[station1]])
@@ -162,7 +177,7 @@ class Map:
             for next_station in current_station.connected_stations:
                 if station1_line_name not in [line.name for line in next_station.lines]:
                     continue
-                print(f"{next_station.name} on {station1_line_name} line")
+                print(f"{next_station.name} ({next_station.id}) on {station1_line_name} line")
                 new_path = list(path)
                 new_path.append(next_station)
                 queue.append(new_path)
@@ -173,3 +188,15 @@ class Map:
             visited.add(current_station.id)
 
         return None  # Return None if no path exists
+
+    def get_pm25_of_path(self, path, line_name):
+        """path is names"""
+        vals = []
+        print("searching path", path)
+        for station_id in path:
+            station = self.stations[self.station_name_id_lookup[station_id]]
+            # print(station.name)
+            # print(station.pm25_values)
+            vals.append(station.pm25_values[line_name])
+
+        return vals
