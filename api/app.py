@@ -1,9 +1,9 @@
 import os
-from flask import Flask, request, render_template, redirect, url_for, session
+from flask import Flask, request, render_template, redirect, url_for, session, jsonify
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-from api.convert import OPTIONS, conversion_formula, TYPE_KEY, TUBE_VAL
+from api.convert import conversion_formula
 from tube_data.tube_map import Map
 
 app = Flask(__name__, template_folder="templates")
@@ -40,9 +40,12 @@ def index():
 
     tube_map = Map()
 
-    RESULT_KEY = "result"  # This must match in the HTML file
+    # Keys that match those in the HTML file:
+    RESULT_KEY = "result"
     SELECTED_OPTION_KEY = "selected_option"
     MINUTES_KEY = "input_minutes"
+    STATION1_KEY = "station_1_option"
+    STATION2_KEY = "station_1_option"
 
     tube_line_options = [line.name for line in tube_map.lines.values()]
 
@@ -50,32 +53,54 @@ def index():
 
         # TODO validate this is in the "options" dictionary and is a string with no tags
         tube_line_select = request.form.get("tube_line_selector")
+        s1_select = request.form.get("station_1_selector")
+        s2_select = request.form.get("station_2_selector")
 
         # TODO validate this is an integer number with regex
         minutes = request.form.get("minutes")
 
-        if not (tube_line_select and minutes):
-            result = f"Invalid A: {minutes} B: {tube_line_select}"
+        if not (tube_line_select and s1_select and s2_select and minutes):
+            result = f"Invalid A: {minutes} B: {tube_line_select}, C: {s1_select}, D: {s2_select}"
 
-        result_tuple = conversion_formula(tube_line_select, minutes)
+        path_between = tube_map.stations_between(s1_select, s2_select, tube_line_select)
+        pm25_on_path = tube_map.get_pm25_of_path(path_between, tube_line_select)
+        result_tuple = conversion_formula(pm25_on_path, minutes)
 
         session[RESULT_KEY] = prettify_results(result_tuple)
         session[SELECTED_OPTION_KEY] = tube_line_select
         session[MINUTES_KEY] = minutes
+        session[STATION1_KEY] = minutes
+        session[STATION2_KEY] = minutes
 
         return redirect(url_for(HTML_FILE.split(".")[0]))
 
-    selected_option = session.pop(SELECTED_OPTION_KEY, None)  # was get
+    selected_line_option = session.pop(SELECTED_OPTION_KEY, None)  # was get
     selected_minutes = session.pop(MINUTES_KEY, None)  # was get
+    selected_s1 = session.pop(STATION1_KEY, None)  # was get
+    selected_s2 = session.pop(STATION2_KEY, None)  # was get
     result = session.pop(RESULT_KEY, None)
+
+    if selected_line_option:
+        if not selected_line_option:
+            print("SELECT", selected_line_option)
+        line_id = tube_map.line_name_to_id_lookup[selected_line_option]
+        s1_options = list(tube_map.lines[line_id].stations_on_line)
+        s2_options = list(tube_map.lines[line_id].stations_on_line)
+    else:
+        s1_options = []
+        s2_options = []
 
     # These kwargs must match those found in the HTML file 
     return render_template(
         HTML_FILE,
         options=tube_line_options,
+        s1_options=s1_options,
+        s2_options=s2_options,
         result=result,
-        selected_option=selected_option,
+        selected_option=selected_line_option,
         selected_minutes=selected_minutes,
+        s1_selected_option=selected_s1,
+        s2_selected_option=selected_s2,
     )
 
 
@@ -83,6 +108,15 @@ def index():
 def about():
     return "About"
 
+@app.route('/get_stations', methods=['POST'])
+def get_stations():
+    tube_line = request.form['tube_line']
+    tube_map = Map()
+    print(tube_map.line_name_to_id_lookup)
+    line_id = tube_map.line_name_to_id_lookup[tube_line]
+    station_set = tube_map.lines[line_id].stations_on_line
+    stations = [station.name for station in station_set]
+    return jsonify(stations=stations)
 
 def prettify_results(result_tuple):
     """ TODO
@@ -98,9 +132,12 @@ def prettify_results(result_tuple):
     if any(r is None for r in result_tuple):
         return None
 
-    print(result_tuple)
 
-    result, cycle_result, urban_result, all_day_result, rod_result, extra_detail = result_tuple
+    try:
+        result, cycle_result, urban_result, all_day_result, rod_result, extra_detail = result_tuple
+    except Exception as e:
+        print(result_tuple)
+        raise e
 
     return_string = [f"<h2>{result:.2f} cigarettes smoked on this trip</h2>"]
 

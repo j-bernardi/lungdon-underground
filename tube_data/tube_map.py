@@ -34,7 +34,8 @@ class Map:
         datastore_path = os.path.join(this_filepath, "datastore")
         line_data_path = os.path.join(datastore_path, "lines.pickle")
         stations_data_path = os.path.join(datastore_path, "stations.pickle")
-        name_map_data_path = os.path.join(datastore_path, "namemap.pickle")
+        station_name_map_data_path = os.path.join(datastore_path, "station_namemap.pickle")
+        line_name_map_data_path = os.path.join(datastore_path, "line_namemap.pickle")
 
         if os.path.exists(datastore_path):
             with open(stations_data_path, "rb") as f:
@@ -43,14 +44,18 @@ class Map:
             with open(line_data_path, "rb") as f:
                 self.lines = pickle.load(f)
 
-            with open(name_map_data_path, "rb") as f:
+            with open(station_name_map_data_path, "rb") as f:
                 self.station_name_id_lookup = pickle.load(f)
+            
+            with open(line_name_map_data_path, "rb") as f:
+                self.line_name_to_id_lookup = pickle.load(f)
 
             return
 
         self.lines = {}
         self.stations = {}
         self.station_name_id_lookup = {}  # Map name to ID
+        self.line_name_to_id_lookup = {}  # Map name to ID
 
         print("Reading stations")
         with open(os.path.join(this_filepath, "stations.csv"), "r") as f:
@@ -80,6 +85,9 @@ class Map:
 
         # Add all the lines to the object
         for _, line_row in lines_data.iterrows():
+
+            self.line_name_to_id_lookup[line_row["name"]] = line_row["line"]
+
             self.lines[line_row["line"]] = Line(
                 id=line_row["line"],
                 name=line_row["name"]
@@ -144,8 +152,11 @@ class Map:
         with open(line_data_path, "wb") as f:
             pickle.dump(self.lines, f)
 
-        with open(name_map_data_path, "wb") as f:
+        with open(station_name_map_data_path, "wb") as f:
             pickle.dump(self.station_name_id_lookup, f)
+        
+        with open(line_name_map_data_path, "wb") as f:
+            pickle.dump(self.line_name_to_id_lookup, f)
     
     def stations_between(self, station1_name, station2_name, station1_line_name):
         """Takes stations as names"""

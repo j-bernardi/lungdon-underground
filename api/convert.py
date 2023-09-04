@@ -52,41 +52,23 @@ for k, item in AMBIENT_DATA.items():
             f"Expected key {expected_key} not found in {k}: {item}")
 
 
-def conversion_formula(tube_path, minutes_spent):
+def conversion_formula(tube_path: list, minutes_spent: str):
 
-    if not tube_path:
-        return f"Invalid tube path {tube_path}"
-    elif tube_path not in AMBIENT_DATA:
-        return f"Invalid option {tube_path}"
-
-    try:
-        mins = float(minutes_spent)
-    except:
-        return "Invalid minutes: must be integer"
-    
-    # TODO - this should now look up pm25 at each station
-    data_item = AMBIENT_DATA[tube_path]
-    #####################################################
-
-    extra_detail = ""
-
-    if data_item[MEAN_KEY] is None:
-        assert data_item[TYPE_KEY] == TUBE_VAL
-        tube_mean_exposure = AMBIENT_DATA[AVERAGE_TUBE_ITEM_KEY][MEAN_KEY]
-        extra_detail += "used default value as no data found"
-    else:
-        tube_mean_exposure = data_item[MEAN_KEY]
-
+    # TODO could be integral of time at each station
+    tube_mean_exposure = sum(tube_path) / len(tube_path)
     cycle_mean_exposure = AMBIENT_DATA[ROADSIDE_ITEM_KEY][MEAN_KEY]
     urban_mean_exposure = AMBIENT_DATA[URBAN_BACKGROUND_ITEM_KEY][MEAN_KEY]
+
+    mins = float(minutes_spent)
 
     frac_mins = mins / (24. * 60.)
 
     result_cigs = CIGARETTES_FOR_ALL_DAY_TUBE(tube_mean_exposure) * frac_mins
+
     cycle_result_cigs = CIGARETTES_FOR_ALL_DAY_TUBE(cycle_mean_exposure) * frac_mins
     urban_result_cigs = CIGARETTES_FOR_ALL_DAY_TUBE(urban_mean_exposure) * frac_mins
     all_day_result = CIGARETTES_FOR_ALL_DAY_TUBE(urban_mean_exposure)
-    rest_of_day_result_cigs = ((24. * 60. - mins) / (24 * 60)) * CIGARETTES_FOR_ALL_DAY_TUBE(urban_mean_exposure)
+    rest_of_day_result_cigs = ((24. * 60. - mins) / (24. * 60.)) * CIGARETTES_FOR_ALL_DAY_TUBE(urban_mean_exposure)
 
+    extra_detail = ""
     return result_cigs, cycle_result_cigs, urban_result_cigs, all_day_result, rest_of_day_result_cigs, extra_detail
-    # result, cycle_result, urban_result, all_day_result, rod_result, extra_detail
