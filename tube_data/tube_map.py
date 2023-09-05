@@ -201,9 +201,18 @@ class Map:
         return None  # Return None if no path exists
 
     def get_time_of_path(self, path, line_name):
+        """Get full journey time of the user
+
+        Returns: journey time underground in minutes
+        """
+        walkdown = 2
+        waittime = 3
+        walkup = 2
 
         # Assume 2 mins per stop
-        return sum([2 for _ in range(len(path))])
+        journeytime = sum([2 for _ in range(len(path))])
+
+        return walkdown + waittime + walkup + journeytime
     
     def get_pm25_of_path(self, path, line_name):
         """path is names"""
