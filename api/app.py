@@ -43,9 +43,8 @@ def index():
     # Keys that match those in the HTML file:
     RESULT_KEY = "result"
     SELECTED_OPTION_KEY = "selected_option"
-    MINUTES_KEY = "input_minutes"
     STATION1_KEY = "station_1_option"
-    STATION2_KEY = "station_1_option"
+    STATION2_KEY = "station_2_option"
 
     tube_line_options = [line.name for line in tube_map.lines.values()]
 
@@ -56,10 +55,7 @@ def index():
         s1_select = request.form.get("station_1_selector")
         s2_select = request.form.get("station_2_selector")
 
-        # TODO validate this is an integer number with regex
-
-        # TODO estimate minutes with average tube speed, number of stations and distance between stations.
-        if not (tube_line_select and s1_select and s2_select and minutes):
+        if not (tube_line_select and s1_select and s2_select):
             result = f"A: {tube_line_select}, B: {s1_select}, C: {s2_select}"
 
         path_between = tube_map.stations_between(s1_select, s2_select, tube_line_select)
@@ -69,7 +65,6 @@ def index():
 
         session[RESULT_KEY] = prettify_results(result_tuple)
         session[SELECTED_OPTION_KEY] = tube_line_select
-        session[MINUTES_KEY] = minutes
         session[STATION1_KEY] = s1_select
         session[STATION2_KEY] = s2_select
 
@@ -81,11 +76,9 @@ def index():
     result = session.pop(RESULT_KEY, None)
 
     if selected_line_option:
-        if not selected_line_option:
-            print("SELECT", selected_line_option)
         line_id = tube_map.line_name_to_id_lookup[selected_line_option]
-        s1_options = list(tube_map.lines[line_id].stations_on_line)
-        s2_options = list(tube_map.lines[line_id].stations_on_line)
+        s1_options = list([s.name for s in tube_map.lines[line_id].stations_on_line])
+        s2_options = list([s.name for s in tube_map.lines[line_id].stations_on_line])
     else:
         s1_options = []
         s2_options = []
@@ -111,7 +104,6 @@ def about():
 def get_stations():
     tube_line = request.form['tube_line']
     tube_map = Map()
-    print(tube_map.line_name_to_id_lookup)
     line_id = tube_map.line_name_to_id_lookup[tube_line]
     station_set = tube_map.lines[line_id].stations_on_line
     stations = [station.name for station in station_set]
@@ -131,12 +123,7 @@ def prettify_results(result_tuple):
     if any(r is None for r in result_tuple):
         return None
 
-
-    try:
-        result, cycle_result, urban_result, all_day_result, rod_result, extra_detail = result_tuple
-    except Exception as e:
-        print(result_tuple)
-        raise e
+    result, cycle_result, urban_result, all_day_result, rod_result, extra_detail = result_tuple
 
     return_string = [f"<h2>{result:.2f} cigarettes smoked on this trip</h2>"]
 

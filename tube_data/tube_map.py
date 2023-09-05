@@ -15,7 +15,8 @@ class Station:
         self.id = id
         self.name = name
         self.lines = lines
-        self.pm25_values = pm25_values  # Map line_name: value
+        # Map {line_name: pm25_value} as different platforms have different values
+        self.pm25_values = pm25_values
         self.connected_stations = connected_stations or set()
 
 class Line:
@@ -27,7 +28,7 @@ class Line:
 
 class Map:
 
-    def __init__(self):
+    def __init__(self, debug=False):
         """Maybe will be needed for lookups"""
 
         this_filepath = os.path.dirname(os.path.abspath(__file__))
@@ -57,31 +58,27 @@ class Map:
         self.station_name_id_lookup = {}  # Map name to ID
         self.line_name_to_id_lookup = {}  # Map name to ID
 
-        print("Reading stations")
         with open(os.path.join(this_filepath, "stations.csv"), "r") as f:
             stations_data = pd.read_csv(f)
-        
-        print("Reading lines")
+    
         with open(os.path.join(this_filepath, "lines.csv"), "r") as f:
             lines_data = pd.read_csv(f)
 
-        print("Reading edges")
         with open(os.path.join(this_filepath, "edges.csv"), "r") as f:
             edges_data = pd.read_csv(f)
         
-        print("Reading pm25")
         with open(os.path.join(this_filepath, "pm25_per_station_line.csv"), "r") as f:
             pm25_data = pd.read_csv(f)
 
-
-        print("LINES")
-        print(lines_data.head())
-        print("STATIONS")
-        print(stations_data.head())
-        print("EDGES")
-        print(edges_data.head())
-        print("PM25")
-        print(pm25_data.head())
+        if debug:
+            print("LINES")
+            print(lines_data.head())
+            print("STATIONS")
+            print(stations_data.head())
+            print("EDGES")
+            print(edges_data.head())
+            print("PM25")
+            print(pm25_data.head())
 
         # Add all the lines to the object
         for _, line_row in lines_data.iterrows():
@@ -188,7 +185,6 @@ class Map:
             for next_station in current_station.connected_stations:
                 if station1_line_name not in [line.name for line in next_station.lines]:
                     continue
-                print(f"{next_station.name} ({next_station.id}) on {station1_line_name} line")
                 new_path = list(path)
                 new_path.append(next_station)
                 queue.append(new_path)
@@ -205,6 +201,7 @@ class Map:
 
         Returns: journey time underground in minutes
         """
+
         walkdown = 2
         waittime = 3
         walkup = 2
@@ -212,16 +209,25 @@ class Map:
         # Assume 2 mins per stop
         journeytime = sum([2 for _ in range(len(path))])
 
-        return walkdown + waittime + walkup + journeytime
+        return walkdown + waittime + journeytime + walkup
     
     def get_pm25_of_path(self, path, line_name):
-        """path is names"""
+        """ path is names
+
+        # TODO integrate this with minutes
+        # multiply walkdown + waittime 
+        # divide by total mins
+        """
         vals = []
-        print("searching path", path)
+
         for station_id in path:
+
             station = self.stations[self.station_name_id_lookup[station_id]]
-            # print(station.name)
-            # print(station.pm25_values)
+
+            assert line_name in station.pm25_values, (
+                f"{line_name} not in {station.name} dict: {station.pm25_values}"
+            )
+
             vals.append(station.pm25_values[line_name])
 
         return vals
