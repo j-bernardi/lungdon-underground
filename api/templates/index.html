@@ -11,6 +11,7 @@
         <label for="tube_line_selector">Select an option custom:</label>
 
         <select id="tube_line_selector" name="tube_line_selector">
+            <option value="" disabled {% if not selected_option %}selected{% endif %}>--Please choose a Tube line--</option>
             {% if options %}
                 {% for option in options %}
                 <option value="{{ option }}" {% if option == selected_option %}selected{% endif %}>
@@ -25,8 +26,9 @@
         <label for="station_1_selector">Select the first station:</label>
 
         <select id="station_1_selector" name="station_1_selector">
-            {% if station_1_options %}
-                {% for s1_option in station_1_options %}
+            <option value="" disabled {% if not s1_selected_option %}selected{% endif %}>--Choose station 1--</option>
+            {% if s1_options %}
+                {% for s1_option in s1_options %}
                 <option value="{{ s1_option }}" {% if s1_option == s1_selected_option %}selected{% endif %}>
                     {{ s1_option }}
                 </option>
@@ -35,10 +37,11 @@
         </select>
 
         <label for="station_2_selector">Select the second station:</label>
-        
+
         <select id="station_2_selector" name="station_2_selector">
-            {% if station_2_options %}
-                {% for s2_option in station_2_options %}
+            <option value="" disabled {% if not s2_selected_option %}selected{% endif %}>--Choose station 2--</option>
+            {% if s2_options %}
+                {% for s2_option in s2_options %}
                 <option value="{{ s2_option }}" {% if s2_option == s2_selected_option %}selected{% endif %}>
                     {{ s2_option }}
                 </option>

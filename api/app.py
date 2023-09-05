@@ -69,8 +69,8 @@ def index():
         session[RESULT_KEY] = prettify_results(result_tuple)
         session[SELECTED_OPTION_KEY] = tube_line_select
         session[MINUTES_KEY] = minutes
-        session[STATION1_KEY] = minutes
-        session[STATION2_KEY] = minutes
+        session[STATION1_KEY] = s1_select
+        session[STATION2_KEY] = s2_select
 
         return redirect(url_for(HTML_FILE.split(".")[0]))
 
