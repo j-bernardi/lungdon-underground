@@ -57,12 +57,13 @@ def index():
         s2_select = request.form.get("station_2_selector")
 
         # TODO validate this is an integer number with regex
-        minutes = request.form.get("minutes")
 
+        # TODO estimate minutes with average tube speed, number of stations and distance between stations.
         if not (tube_line_select and s1_select and s2_select and minutes):
-            result = f"Invalid A: {minutes} B: {tube_line_select}, C: {s1_select}, D: {s2_select}"
+            result = f"A: {tube_line_select}, B: {s1_select}, C: {s2_select}"
 
         path_between = tube_map.stations_between(s1_select, s2_select, tube_line_select)
+        minutes = tube_map.get_time_of_path(path_between, tube_line_select)
         pm25_on_path = tube_map.get_pm25_of_path(path_between, tube_line_select)
         result_tuple = conversion_formula(pm25_on_path, minutes)
 
@@ -75,7 +76,6 @@ def index():
         return redirect(url_for(HTML_FILE.split(".")[0]))
 
     selected_line_option = session.pop(SELECTED_OPTION_KEY, None)  # was get
-    selected_minutes = session.pop(MINUTES_KEY, None)  # was get
     selected_s1 = session.pop(STATION1_KEY, None)  # was get
     selected_s2 = session.pop(STATION2_KEY, None)  # was get
     result = session.pop(RESULT_KEY, None)
@@ -98,7 +98,6 @@ def index():
         s2_options=s2_options,
         result=result,
         selected_option=selected_line_option,
-        selected_minutes=selected_minutes,
         s1_selected_option=selected_s1,
         s2_selected_option=selected_s2,
     )

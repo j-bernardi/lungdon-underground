@@ -200,6 +200,11 @@ class Map:
 
         return None  # Return None if no path exists
 
+    def get_time_of_path(self, path, line_name):
+
+        # Assume 2 mins per stop
+        return sum([2 for _ in range(len(path))])
+    
     def get_pm25_of_path(self, path, line_name):
         """path is names"""
         vals = []
