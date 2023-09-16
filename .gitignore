@@ -1,5 +1,4 @@
 .vercel
 secret_key.py
 __pycache__
-tube_data/create_edge_time_data.py
-testing_tube.py
+redis.info
