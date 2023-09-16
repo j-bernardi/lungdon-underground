@@ -13,25 +13,13 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 HTML_FILE = "index.html"  # looks in folder due to line above
 
 
-# TODO if putting online:
-#   consider how to verify that the code being run is the version I put on github
-#   E.g. how to prevent a HTML post request being sent with arbitrary parameters
-#   that rewrites my function
-
-
 limiter = Limiter(
     app=app,
-    key_func=get_remote_address,  # TODO consider whether exposing is security risk
-    default_limits=["300 per day", "50 per hour", "20 per minute", "1 per second"],  # TODO not sure what this does as the limit must be set below also
+    key_func=get_remote_address,
+    storage_uri="redis://localhost:6379",
+    default_limits=["300 per day", "50 per hour", "20 per minute", "1 per second"],
+    strategy="fixed-window-elastic-expiry",
 )
-
-"""
-TODO resolve:
-    /var/folders/d4/x1rdt1n9341fwyk1lglmnsg00000gn/T/zeit-fun-9bb421d64b15/flask_limiter/extension.py:308:
-    UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified.
-    This is not recommended for production use.
-    See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
-"""
 
 
 @app.route("/", methods=["GET", "POST"])
