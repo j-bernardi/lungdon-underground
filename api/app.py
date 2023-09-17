@@ -15,7 +15,7 @@ HTML_FILE = "index.html"  # looks in folder due to line above
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    storage_uri="redis://localhost:6379",
+    storage_uri=os.environ.get('REDIS_URI', "redis://localhost:6379"),  # TODO - sort cloud DB storage
     default_limits=["300 per day", "50 per hour", "20 per minute", "1 per second"],
     strategy="fixed-window-elastic-expiry",
 )
