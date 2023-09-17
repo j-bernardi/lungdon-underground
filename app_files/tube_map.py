@@ -8,6 +8,8 @@ pd.set_option('display.max_rows', 500)
 pd.set_option('display.max_columns', 500)
 pd.set_option('display.width', 1000)
 
+TUBE_DATA_PATH = "tube_data"
+
 
 class Station:
 
@@ -31,8 +33,7 @@ class Map:
     def __init__(self, debug=False):
         """Maybe will be needed for lookups"""
 
-        this_filepath = os.path.dirname(os.path.abspath(__file__))
-        datastore_path = os.path.join(this_filepath, "datastore")
+        datastore_path = os.path.join(TUBE_DATA_PATH, "datastore")
         line_data_path = os.path.join(datastore_path, "lines.pickle")
         stations_data_path = os.path.join(datastore_path, "stations.pickle")
         station_name_map_data_path = os.path.join(datastore_path, "station_namemap.pickle")
@@ -58,16 +59,16 @@ class Map:
         self.station_name_id_lookup = {}  # Map name to ID
         self.line_name_to_id_lookup = {}  # Map name to ID
 
-        with open(os.path.join(this_filepath, "stations.csv"), "r") as f:
+        with open(os.path.join(TUBE_DATA_PATH, "stations.csv"), "r") as f:
             stations_data = pd.read_csv(f)
     
-        with open(os.path.join(this_filepath, "lines.csv"), "r") as f:
+        with open(os.path.join(TUBE_DATA_PATH, "lines.csv"), "r") as f:
             lines_data = pd.read_csv(f)
 
-        with open(os.path.join(this_filepath, "edges.csv"), "r") as f:
+        with open(os.path.join(TUBE_DATA_PATH, "edges.csv"), "r") as f:
             edges_data = pd.read_csv(f)
         
-        with open(os.path.join(this_filepath, "pm25_per_station_line.csv"), "r") as f:
+        with open(os.path.join(TUBE_DATA_PATH, "pm25_per_station_line.csv"), "r") as f:
             pm25_data = pd.read_csv(f)
 
         if debug:

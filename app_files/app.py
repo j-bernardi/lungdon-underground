@@ -4,7 +4,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
 from app_files.convert import conversion_formula
-from tube_data.tube_map import Map
+from app_files.tube_map import Map
 
 app = Flask(__name__, template_folder="templates")
 
