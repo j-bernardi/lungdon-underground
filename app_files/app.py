@@ -15,6 +15,7 @@ HTML_FILE = "index.html"  # looks in folder due to line above
 # print("ONE", url_for("static"))
 # print("TWO", url_for("static", filename="style.css"))
 
+
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
@@ -144,3 +145,13 @@ def prettify_results(result_tuple):
         return_string.append(f"<p>{extra_detail}</p>")
 
     return "<br>".join(return_string)
+
+
+print("start print")
+try:
+    with app.app_context():
+        x = url_for('static', filename='style.css')
+        print(x)
+except Exception as e:
+    print(e)
+print("End print")

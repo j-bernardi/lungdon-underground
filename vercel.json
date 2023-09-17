@@ -9,6 +9,10 @@
      ],
      "routes": [
         {
+            "src": "/static/(.*)",
+            "dest": "app_files/static/$1"
+        },
+        {
              "src": "/(.*)",
              "dest": "app_files/app.py"
          }
