@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <title>Tube Station Calculator</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
     <div class="container">
-        <h1>Welcome to My Tube Station Calculator</h1>
+        <h1>How much am I smoking by riding the tube?</h1>
 
         <form method="post" class="calculator-form">
 
@@ -57,7 +57,7 @@
         </div>
 
         <input type="submit" value="Calculate" class="calculate-button rounded shadow">
-        
+
         </form>
 
         {% if result %}
@@ -87,11 +87,11 @@
                         station2Selector.append($('<option></option>').attr('value', value).text(value));
                     });
                     // Select the second item
-                    station2Selector.selectedIndex = 1;
-                    console.log("new script")
+                    // station2Selector.selectedIndex = 1;
+                    // console.log("new script")
 
                 });
-                document.getElementById("station_2_selector").selectedIndex = 1;
+                // document.getElementById("station_2_selector").selectedIndex = 1;
             });
         });
     </script>

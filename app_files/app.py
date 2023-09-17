@@ -6,12 +6,14 @@ from flask_limiter.util import get_remote_address
 from app_files.convert import conversion_formula
 from app_files.tube_map import Map
 
-app = Flask(__name__, template_folder="templates")
+app = Flask(__name__, template_folder="templates", static_folder="static")
 
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 
 HTML_FILE = "index.html"  # looks in folder due to line above
 
+# print("ONE", url_for("static"))
+# print("TWO", url_for("static", filename="style.css"))
 
 limiter = Limiter(
     app=app,
@@ -26,7 +28,7 @@ limiter = Limiter(
 @limiter.limit("2 per second")
 def index():
 
-    tube_map = Map()
+    tube_map_obj = Map()
 
     # Keys that match those in the HTML file:
     RESULT_KEY = "result"
@@ -34,7 +36,7 @@ def index():
     STATION1_KEY = "station_1_option"
     STATION2_KEY = "station_2_option"
 
-    tube_line_options = [line.name for line in tube_map.lines.values()]
+    tube_line_options = [line.name for line in tube_map_obj.lines.values()]
 
     if request.method == "POST":
 
@@ -46,9 +48,9 @@ def index():
         if not (tube_line_select and s1_select and s2_select):
             result = f"A: {tube_line_select}, B: {s1_select}, C: {s2_select}"
 
-        path_between = tube_map.stations_between(s1_select, s2_select, tube_line_select)
-        minutes = tube_map.get_time_of_path(path_between, tube_line_select)
-        pm25_on_path = tube_map.get_pm25_of_path(path_between, tube_line_select)
+        path_between = tube_map_obj.stations_between(s1_select, s2_select, tube_line_select)
+        minutes = tube_map_obj.get_time_of_path(path_between, tube_line_select)
+        pm25_on_path = tube_map_obj.get_pm25_of_path(path_between, tube_line_select)
         result_tuple = conversion_formula(pm25_on_path, minutes)
 
         session[RESULT_KEY] = prettify_results(result_tuple)
@@ -56,7 +58,7 @@ def index():
         session[STATION1_KEY] = s1_select
         session[STATION2_KEY] = s2_select
 
-        return redirect(url_for(HTML_FILE.split(".")[0]))
+        return redirect(url_for("index"))
 
     selected_line_option = session.pop(SELECTED_OPTION_KEY, None)  # was get
     selected_s1 = session.pop(STATION1_KEY, None)  # was get
@@ -64,9 +66,9 @@ def index():
     result = session.pop(RESULT_KEY, None)
 
     if selected_line_option:
-        line_id = tube_map.line_name_to_id_lookup[selected_line_option]
-        s1_options = list([s.name for s in tube_map.lines[line_id].stations_on_line])
-        s2_options = list([s.name for s in tube_map.lines[line_id].stations_on_line])
+        line_id = tube_map_obj.line_name_to_id_lookup[selected_line_option]
+        s1_options = list([s.name for s in tube_map_obj.lines[line_id].stations_on_line])
+        s2_options = list([s.name for s in tube_map_obj.lines[line_id].stations_on_line])
     else:
         s1_options = []
         s2_options = []
@@ -91,9 +93,9 @@ def about():
 @app.route('/get_stations', methods=['POST'])
 def get_stations():
     tube_line = request.form['tube_line']
-    tube_map = Map()
-    line_id = tube_map.line_name_to_id_lookup[tube_line]
-    station_set = tube_map.lines[line_id].stations_on_line
+    tube_map_obj = Map()
+    line_id = tube_map_obj.line_name_to_id_lookup[tube_line]
+    station_set = tube_map_obj.lines[line_id].stations_on_line
     stations = [station.name for station in station_set]
     return jsonify(stations=stations)
 
