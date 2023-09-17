@@ -1,6 +1,6 @@
-print("Enter", file=sys.stderr)  # Temp
 import os
 import sys
+print("Enter", file=sys.stderr)  # Temp
 from flask import Flask, request, render_template, redirect, url_for, session, jsonify
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address

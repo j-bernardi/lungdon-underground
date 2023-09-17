@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <title>Tube Station Calculator</title>
     <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- For typing selector fields -->
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+
 </head>
 <body>
 
@@ -13,7 +20,7 @@
         <form method="post" class="calculator-form">
 
         <div class="selection-group">
-            <select id="tube_line_selector" name="tube_line_selector">
+            <select id="tube_line_selector" name="tube_line_selector" class="selector-class">
                 <option value="" disabled {% if not selected_option %}selected{% endif %}>--Please choose a Tube line--</option>
                 {% if options %}
                     {% for option in options %}
@@ -28,7 +35,7 @@
         <div class="selection-group">
 
             <div class="selection-box shadow">
-                <select id="station_1_selector" name="station_1_selector">
+                <select id="station_1_selector" name="station_1_selector" class="selector-class">
                     <option value="" disabled {% if not s1_selected_option %}selected{% endif %}>--Choose station 1--</option>
                     {% if s1_options %}
                         {% for s1_option in s1_options %}
@@ -43,7 +50,7 @@
             <div class="arrow">&#8594;</div>
 
             <div class="selection-box shadow">
-                <select id="station_2_selector" name="station_2_selector">
+                <select id="station_2_selector" name="station_2_selector" class="selector-class">
                     <option value="" disabled {% if not s2_selected_option %}selected{% endif %}>--Choose station 2--</option>
                     {% if s2_options %}
                         {% for s2_option in s2_options %}
@@ -67,9 +74,14 @@
         {% endif %}
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
+    <script type="text/javascript">
         $(document).ready(function() {
+
+            $('.selector-class').select2();
+            $(document).on('select2:open', () => {
+                document.querySelector('.select2-search__field').focus();
+            });
+
             $("#tube_line_selector").change(function() {
                 var selectedLine = $(this).val();
                 $.post("/get_stations", {
@@ -86,12 +98,16 @@
                         station1Selector.append($('<option></option>').attr('value', value).text(value));
                         station2Selector.append($('<option></option>').attr('value', value).text(value));
                     });
+
                     // Select the second item
                     // station2Selector.selectedIndex = 1;
                     // console.log("new script")
+                    
+                    // if select 2 breaks:
+                    // station1Selector.select2('destroy').select2();
+                    // station2Selector.select2('destroy').select2();
 
                 });
-                // document.getElementById("station_2_selector").selectedIndex = 1;
             });
         });
     </script>
