@@ -6,18 +6,7 @@ from flask_limiter.util import get_remote_address
 from api.convert import conversion_formula
 from api.tube_map import Map
 
-app = Flask(
-    __name__,
-    template_folder="templates",
-    static_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), "static"),
-    static_url_path="/static")
-
-print(app.has_static_folder) # True
-print(app.static_folder)  # /Users/jamie/code/lungdon-underground/api/static
-print(app.static_url_path)  # /static
-print(app._static_folder)  # static
-print(app._static_url_path)  # None
-
+app = Flask(__name__, template_folder="templates", static_folder="static")
 
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 
@@ -131,12 +120,10 @@ def prettify_results(result_tuple):
 
     return_string.append("<p><strong>More stats if you live in London...</strong></p>")
 
-    # TODO - check PM2.5 indoors
-    # return_string.append(
-    #     f"<p><strong>Staying home</strong> would have been {urban_result:.2f} (assuming you live in central london).</p>"
-    # )
+    return_string.append(
+        f"<p><strong>Staying home</strong> would have been {urban_result:.2f}. Learn more about air filtration [TODO - suggest some indoors better than others]</p>"
+    )
 
-    # TODO - check PM2.5 indoors
     return_string.append(
         f"<p><strong>Your daily total</strong> is taken from {all_day_result:.2f} to {(rod_result + result):.2f} by this tube ride. "
         f"That's the price to pay for living in London!</p>"
@@ -152,15 +139,3 @@ def prettify_results(result_tuple):
         return_string.append(f"<p>{extra_detail}</p>")
 
     return "<br>".join(return_string)
-
-
-print("start print")
-try:
-    with app.app_context():
-        y = url_for('static')
-        print(y)
-        x = url_for('static', filename='style.css')
-        print(x)
-except Exception as e:
-    print(e)
-print("End print")
