@@ -6,15 +6,22 @@ from flask_limiter.util import get_remote_address
 from api.convert import conversion_formula
 from api.tube_map import Map
 
-app = Flask(__name__, template_folder="templates", static_folder="static")
+app = Flask(
+    __name__,
+    template_folder="templates",
+    static_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), "static"),
+    static_url_path="/static")
+
+print(app.has_static_folder) # True
+print(app.static_folder)  # /Users/jamie/code/lungdon-underground/api/static
+print(app.static_url_path)  # /static
+print(app._static_folder)  # static
+print(app._static_url_path)  # None
+
 
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 
 HTML_FILE = "index.html"  # looks in folder due to line above
-
-# print("ONE", url_for("static"))
-# print("TWO", url_for("static", filename="style.css"))
-
 
 limiter = Limiter(
     app=app,
@@ -150,6 +157,8 @@ def prettify_results(result_tuple):
 print("start print")
 try:
     with app.app_context():
+        y = url_for('static')
+        print(y)
         x = url_for('static', filename='style.css')
         print(x)
 except Exception as e:
