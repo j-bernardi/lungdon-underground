@@ -3,8 +3,8 @@ from flask import Flask, request, render_template, redirect, url_for, session, j
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-from app_files.convert import conversion_formula
-from app_files.tube_map import Map
+from api.convert import conversion_formula
+from api.tube_map import Map
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
 

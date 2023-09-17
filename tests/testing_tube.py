@@ -1,8 +1,11 @@
 import pandas as pd
-from app_files.tube_map import Map
+
+from api.tube_map import Map
 
 if __name__ == "__main__":
-    map = Map()
+    # python -m tests.testing_tube
+
+    map = Map(force_rebuild=True)  # Forces rebuild
     line_name = "Circle Line"  # has to end in 'Line'
 
     print("LINES:", map.lines)

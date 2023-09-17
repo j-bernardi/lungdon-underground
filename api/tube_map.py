@@ -30,7 +30,7 @@ class Line:
 
 class Map:
 
-    def __init__(self, debug=False):
+    def __init__(self, debug=False, force_rebuild=False):
         """Maybe will be needed for lookups"""
 
         datastore_path = os.path.join(TUBE_DATA_PATH, "datastore")
@@ -39,7 +39,7 @@ class Map:
         station_name_map_data_path = os.path.join(datastore_path, "station_namemap.pickle")
         line_name_map_data_path = os.path.join(datastore_path, "line_namemap.pickle")
 
-        if os.path.exists(datastore_path):
+        if os.path.exists(datastore_path) and not force_rebuild:
             with open(stations_data_path, "rb") as f:
                 self.stations = pickle.load(f)
             
@@ -142,7 +142,8 @@ class Map:
             s1.connected_stations.add(s2)
             s2.connected_stations.add(s1)
 
-        os.makedirs(datastore_path)
+        if not force_rebuild:
+            os.makedirs(datastore_path)
         
         with open(stations_data_path, "wb") as f:
             pickle.dump(self.stations, f)
