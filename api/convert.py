@@ -18,9 +18,7 @@ URBAN_BACKGROUND_ITEM_KEY = "Ambient Background"
 
 # All units in microgrammes per m3
 # Source [1]: https://www.sciencedirect.com/science/article/pii/S0160412019313649?via%3Dihub
-
-# TODO use the actual data instead of Options! From api.tube_map import Map
-#  Get every tube stop passed through, and average the data
+# Source [2]: TODO - this was from london air quality monitoring over the last year.
 
 AMBIENT_DATA = {
     AVERAGE_TUBE_ITEM_KEY: {
@@ -30,8 +28,8 @@ AMBIENT_DATA = {
     },
     URBAN_BACKGROUND_ITEM_KEY: {
         TYPE_KEY: AMBIENT_VAL,
-        MEAN_KEY: 19,  # [1]  TODO figure out what this was
-        MEDIAN_KEY: 14  # [1]
+        MEAN_KEY: 11,  # [2]  TODO figure out what this was
+        MEDIAN_KEY: 11  # [2]
     },
     ROADSIDE_ITEM_KEY: {
         TYPE_KEY: AMBIENT_VAL,

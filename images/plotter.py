@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 markers = {
     "Annual target": 5,  # https://www.who.int/news-room/feature-stories/detail/what-are-the-who-air-quality-guidelines
-    "24 hour target": 15,  # https://www.who.int/news-room/feature-stories/detail/what-are-the-who-air-quality-guidelines
+    "WHO 24h target": 15,  # https://www.who.int/news-room/feature-stories/detail/what-are-the-who-air-quality-guidelines
 }
 
 legend = ["WHO 2021 limits"]
@@ -24,8 +24,8 @@ station_medians = {
     "Central line,\nmedian station": (57.00, "red"),
     # "Hammersmith & City": (22.00, "pink"),
     "London,\nMarylebone Road,\nAnnual Avg\n(2021)": (11, "gray"),  # https://www.westminster.gov.uk/media/document/air-quality-report-2021
-    "Edinburgh,\nAnnual Avg\n(2022)": (6, "gray"),  # https://www.statista.com/statistics/1299076/pm25-emissions-selected-cities-in-united-kingdom/
-    # "Stockwell Station\nMax PM2.5": (639, "black"),
+    # "Edinburgh,\nAnnual Avg\n(2022)": (6, "gray"),  # https://www.statista.com/statistics/1299076/pm25-emissions-selected-cities-in-united-kingdom/
+    "Stockwell Station\nMax PM2.5": (639, "black"),
 }
 
 tube = {
@@ -116,7 +116,7 @@ def plot_bars():
         plt.axhline(y=marker_value, color='red', linestyle='--')
         plt.text(
             bars[-1].get_x() + bars[1].get_x() * 1.1 - bars[0].get_x(),
-            marker_value + (7 * -1 if i == 0 else 0),
+            marker_value + (11 * -1 if i == 0 else 0),
             f'{marker_label}',
             verticalalignment='bottom',
             fontsize=16,
@@ -153,5 +153,5 @@ def plot_bars():
     plt.show()
 
 if __name__ == "__main__":
-    # plot_bars()
-    pie_charts()
+    plot_bars()
+    # pie_charts()

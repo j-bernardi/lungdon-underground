@@ -212,13 +212,13 @@ class Map:
         journeytime = sum([2 for _ in range(len(path))])
 
         return walkdown + waittime + journeytime + walkup
-    
+
     def get_pm25_of_path(self, path, line_name):
         """ path is names
 
-        # TODO integrate this with minutes
-        # multiply walkdown + waittime 
-        # divide by total mins
+        - TODO integrate this with minutes
+            multiply walkdown + waittime 
+            divide by total mins
         """
         vals = []
 
